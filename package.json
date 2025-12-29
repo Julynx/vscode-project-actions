@@ -17,6 +17,7 @@
     "url": "https://github.com/julynx/vscode-project-actions/issues"
   },
   "homepage": "https://github.com/julynx/vscode-project-actions#readme",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
