@@ -10,26 +10,6 @@ Display project-specific action buttons on the status bar that run custom comman
 - **Auto-Reload**: Automatically reloads when the configuration file changes
 - **Customizable**: Configure button text, commands, tooltips, and colors
 
-## Installation
-
-### From VSIX
-
-1. Download the latest `.vsix` file from the [releases page](https://github.com/julynx/vscode-project-actions/releases)
-2. In VS Code, go to Extensions (Ctrl+Shift+X / Cmd+Shift+X)
-3. Click the `...` menu at the top and select "Install from VSIX..."
-4. Select the downloaded `.vsix` file
-
-### From Source
-
-```bash
-git clone https://github.com/julynx/vscode-project-actions.git
-cd vscode-project-actions
-npm install
-npm run compile
-```
-
-Then press F5 to open a new VS Code window with the extension loaded.
-
 ## Usage
 
 ### Basic Setup
