@@ -14,6 +14,7 @@ interface ProjectActionsConfig {
 }
 
 let statusBarItems: vscode.StatusBarItem[] = [];
+let commandDisposables: vscode.Disposable[] = [];
 let fileWatcher: vscode.FileSystemWatcher | undefined;
 
 /**
@@ -45,6 +46,7 @@ export function activate(context: vscode.ExtensionContext): void {
  */
 export function deactivate(): void {
     disposeStatusBarItems();
+    disposeCommandDisposables();
     if (fileWatcher) {
         fileWatcher.dispose();
     }
@@ -97,8 +99,9 @@ function getConfigFileName(): string {
  * Loads and displays project actions from configuration file
  */
 function loadProjectActions(context: vscode.ExtensionContext): void {
-    // Clear existing status bar items
+    // Clear existing status bar items and command disposables
     disposeStatusBarItems();
+    disposeCommandDisposables();
 
     // Check if workspace is open
     if (!vscode.workspace.workspaceFolders) {
@@ -155,7 +158,8 @@ function loadProjectActions(context: vscode.ExtensionContext): void {
                 executeAction(action.command);
             });
 
-            context.subscriptions.push(disposable);
+            // Store the disposable so we can clean it up on reload
+            commandDisposables.push(disposable);
 
             // Assign the command to the status bar item
             statusBarItem.command = commandId;
@@ -182,6 +186,14 @@ function executeAction(command: string): void {
     const terminal = vscode.window.createTerminal('Project Actions');
     terminal.show();
     terminal.sendText(command);
+}
+
+/**
+ * Disposes all registered command disposables
+ */
+function disposeCommandDisposables(): void {
+    commandDisposables.forEach(disposable => disposable.dispose());
+    commandDisposables = [];
 }
 
 /**
