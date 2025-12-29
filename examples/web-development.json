@@ -1,0 +1,29 @@
+{
+  "actions": [
+    {
+      "text": "$(rocket) Dev Server",
+      "command": "npm run dev",
+      "tooltip": "Start development server"
+    },
+    {
+      "text": "$(beaker) Test",
+      "command": "npm test",
+      "tooltip": "Run tests with coverage"
+    },
+    {
+      "text": "$(package) Build",
+      "command": "npm run build",
+      "tooltip": "Build for production"
+    },
+    {
+      "text": "$(code-review) Lint",
+      "command": "npm run lint",
+      "tooltip": "Run ESLint"
+    },
+    {
+      "text": "$(paintcan) Format",
+      "command": "npm run format",
+      "tooltip": "Format code with Prettier"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "actions": [
+    {
+      "text": "$(package) Install",
+      "command": "npm install",
+      "tooltip": "Install dependencies"
+    },
+    {
+      "text": "$(tools) Compile",
+      "command": "npm run compile",
+      "tooltip": "Compile TypeScript"
+    },
+    {
+      "text": "$(play) Run Extension",
+      "command": "code --extensionDevelopmentPath=${workspaceFolder}",
+      "tooltip": "Launch extension in development mode"
+    },
+    {
+      "text": "$(package) Package",
+      "command": "npx vsce package",
+      "tooltip": "Create VSIX package"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "name": "project-actions",
+  "displayName": "Project Actions",
+  "description": "Display project-specific action buttons on the status bar that run custom commands defined in .project-actions.json",
+  "version": "1.0.0",
+  "publisher": "julynx",
+  "author": {
+    "name": "Julynx",
+    "email": "juliocabria@tutanota.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julynx/vscode-project-actions"
+  },
+  "bugs": {
+    "url": "https://github.com/julynx/vscode-project-actions/issues"
+  },
+  "homepage": "https://github.com/julynx/vscode-project-actions#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "project",
+    "actions",
+    "buttons",
+    "status bar",
+    "commands",
+    "productivity",
+    "workflow"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "project-actions.reload",
+        "title": "Project Actions: Reload Configuration"
+      }
+    ],
+    "configuration": {
+      "title": "Project Actions",
+      "properties": {
+        "project-actions.configFileName": {
+          "type": "string",
+          "default": ".project-actions.json",
+          "description": "Name of the configuration file to look for in the project root"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0"
+  }
+}

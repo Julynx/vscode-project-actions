@@ -1,0 +1,30 @@
+{
+  "actions": [
+    {
+      "text": "$(git-pull-request) Status",
+      "command": "git status",
+      "tooltip": "Show git status"
+    },
+    {
+      "text": "$(diff) Diff",
+      "command": "git diff",
+      "tooltip": "Show changes"
+    },
+    {
+      "text": "$(add) Stage All",
+      "command": "git add .",
+      "tooltip": "Stage all changes"
+    },
+    {
+      "text": "$(git-commit) Quick Commit",
+      "command": "git commit -m 'Update'",
+      "tooltip": "Quick commit with generic message"
+    },
+    {
+      "text": "$(cloud-upload) Push",
+      "command": "git push",
+      "tooltip": "Push to remote",
+      "color": "#00ff00"
+    }
+  ]
+}
