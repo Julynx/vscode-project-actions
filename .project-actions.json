@@ -7,7 +7,7 @@
       "color": "#00CCAA"
     },
     {
-      "text": "$(package) Install",
+      "text": "$(gear) Install",
       "command": "npm install",
       "tooltip": "Install dependencies",
       "color": "#00AACC"
@@ -22,7 +22,25 @@
       "text": "$(package) Package",
       "command": "npx vsce package",
       "tooltip": "Create VSIX package",
-      "color": "#AA00CC"
+      "color": "#CC00CC"
+    },
+    {
+      "text": "$(arrow-up) Bump",
+      "command": "npm version patch",
+      "tooltip": "Bump version (patch)",
+      "color": "#AACC00"
+    },
+    {
+      "text": "$(repo-push) Push",
+      "command": "git add . && git commit && git push",
+      "tooltip": "Commit and push changes",
+      "color": "#CCAAAA"
+    },
+    {
+      "text": "$(cloud-upload) Publish",
+      "command": "npx vsce publish",
+      "tooltip": "Publish extension to Marketplace",
+      "color": "#AACCAA"
     }
   ]
 }
