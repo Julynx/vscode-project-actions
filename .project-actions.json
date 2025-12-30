@@ -1,24 +1,28 @@
 {
   "actions": [
     {
+      "text": "$(play) Run",
+      "command": "code --extensionDevelopmentPath=${workspaceFolder}",
+      "tooltip": "Launch extension in development mode",
+      "color": "#00CCAA"
+    },
+    {
       "text": "$(package) Install",
       "command": "npm install",
-      "tooltip": "Install dependencies"
+      "tooltip": "Install dependencies",
+      "color": "#00AACC"
     },
     {
       "text": "$(tools) Compile",
       "command": "npm run compile",
-      "tooltip": "Compile TypeScript"
-    },
-    {
-      "text": "$(play) Run Extension",
-      "command": "code --extensionDevelopmentPath=${workspaceFolder}",
-      "tooltip": "Launch extension in development mode"
+      "tooltip": "Compile TypeScript",
+      "color": "#CCAA00"
     },
     {
       "text": "$(package) Package",
       "command": "npx vsce package",
-      "tooltip": "Create VSIX package"
+      "tooltip": "Create VSIX package",
+      "color": "#AA00CC"
     }
   ]
 }

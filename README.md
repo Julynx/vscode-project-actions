@@ -2,6 +2,8 @@
 
 Display project-specific action buttons on the status bar that run custom commands when clicked.
 
+![Project Actions Screenshot](assets/screenshot.png)
+
 ## Features
 
 - **Custom Status Bar Buttons**: Add project-specific buttons to your VS Code status bar
@@ -51,16 +53,6 @@ Each action button can have the following properties:
 - **command** (required): The shell command to execute when clicked
 - **tooltip** (optional): Hover text for the button (defaults to the command)
 - **color** (optional): Text color for the button (CSS color value)
-
-### Extension Settings
-
-This extension contributes the following settings:
-
-- `project-actions.configFileName`: Name of the configuration file (default: `.project-actions.json`)
-
-### Commands
-
-- `Project Actions: Reload Configuration`: Manually reload the configuration file
 
 ## Examples
 
@@ -150,6 +142,12 @@ This extension contributes the following settings:
 - Commands are executed in the VS Code integrated terminal
 - You can use shell operators like `&&` to chain multiple commands
 - Buttons appear from left to right in the order they're defined
+
+## Extension Settings
+
+This extension contributes the following settings:
+
+- `project-actions.configFileName`: Name of the configuration file (default: `.project-actions.json`)
 
 ## Requirements
 

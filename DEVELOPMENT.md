@@ -139,7 +139,7 @@ This creates a `.vsix` file (e.g., `project-actions-1.0.0.vsix`) that can be:
 Login with your publisher:
 
 ```bash
-vsce login julynx
+vsce login your-publisher-name
 ```
 
 Publish the extension:
