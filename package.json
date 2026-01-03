@@ -2,7 +2,7 @@
   "name": "project-actions",
   "displayName": "Project Actions",
   "description": "Display project-specific action buttons on the status bar that run custom commands defined in .project-actions.json",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "julynx",
   "author": {
     "name": "Julynx",
