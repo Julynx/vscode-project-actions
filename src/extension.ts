@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import JSON5 from 'json5';
 
 interface ActionButton {
     text: string;
@@ -122,7 +123,7 @@ function loadProjectActions(context: vscode.ExtensionContext): void {
     try {
         // Read and parse configuration file
         const configContent = fs.readFileSync(configPath, 'utf8');
-        const config: ProjectActionsConfig = JSON.parse(configContent);
+        const config: ProjectActionsConfig = JSON5.parse(configContent);
 
         if (!config.actions || !Array.isArray(config.actions)) {
             vscode.window.showErrorMessage(
