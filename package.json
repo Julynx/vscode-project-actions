@@ -2,7 +2,7 @@
   "name": "project-actions",
   "displayName": "Project Actions",
   "description": "Add custom action buttons to the status bar that execute shell commands",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "publisher": "julynx",
   "author": {
     "name": "Julynx",
@@ -41,8 +41,12 @@
     "languages": [
       {
         "id": "json5",
-        "filenames": [".project-actions.json"],
-        "filenamePatterns": ["**/project-actions.json"]
+        "filenames": [
+          ".project-actions.json"
+        ],
+        "filenamePatterns": [
+          "**/project-actions.json"
+        ]
       }
     ],
     "commands": [
@@ -73,7 +77,10 @@
           "description": "Global actions that are displayed when glob patterns match files in the workspace, or always if no glob is specified",
           "items": {
             "type": "object",
-            "required": ["text", "command"],
+            "required": [
+              "text",
+              "command"
+            ],
             "properties": {
               "text": {
                 "type": "string",
