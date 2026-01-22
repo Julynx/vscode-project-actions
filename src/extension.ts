@@ -12,7 +12,7 @@ interface ActionButton {
 }
 
 interface GlobalActionButton extends ActionButton {
-    glob: string;
+    glob?: string;
 }
 
 interface ProjectActionsConfig {
@@ -176,11 +176,23 @@ async function getMatchingGlobalActions(workspaceRoot: string): Promise<ActionBu
     const matchingActions: ActionButton[] = [];
     
     for (const action of globalActions) {
-        if (!isValidAction(action) || !action.glob) {
+        if (!isValidAction(action)) {
             console.warn('Skipping invalid global action:', action);
             continue;
         }
         
+        // If no glob pattern is specified, always show the action
+        if (!action.glob) {
+            matchingActions.push({
+                text: action.text,
+                command: action.command,
+                tooltip: action.tooltip,
+                color: action.color
+            });
+            continue;
+        }
+        
+        // If glob pattern is specified, check if it matches
         if (await matchesGlobPattern(workspaceRoot, action.glob)) {
             matchingActions.push({
                 text: action.text,

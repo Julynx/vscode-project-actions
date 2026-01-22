@@ -2,7 +2,7 @@
   "name": "project-actions",
   "displayName": "Project Actions",
   "description": "Add custom action buttons to the status bar that execute shell commands",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "julynx",
   "author": {
     "name": "Julynx",
@@ -70,10 +70,10 @@
         "project-actions.globalActions": {
           "type": "array",
           "default": [],
-          "description": "Global actions that are displayed when glob patterns match files in the workspace",
+          "description": "Global actions that are displayed when glob patterns match files in the workspace, or always if no glob is specified",
           "items": {
             "type": "object",
-            "required": ["text", "command", "glob"],
+            "required": ["text", "command"],
             "properties": {
               "text": {
                 "type": "string",
@@ -85,7 +85,7 @@
               },
               "glob": {
                 "type": "string",
-                "description": "Glob pattern to match against workspace files (e.g., '**/.git' to match projects with a .git folder)"
+                "description": "Optional glob pattern to match against workspace files (e.g., '**/.git' to match projects with a .git folder). If omitted, the action is always shown."
               },
               "tooltip": {
                 "type": "string",

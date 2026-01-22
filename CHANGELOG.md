@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.1] - 2026-01-22
+
+### Changed
+- Made `glob` property optional for global actions - actions without a glob pattern are now always shown
+
 ## [1.1.0] - 2026-01-22
 
 ### Added
