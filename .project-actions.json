@@ -32,7 +32,7 @@
     },
     {
       "text": "$(repo-push) Push",
-      "command": "git add . && git commit && git push",
+      "command": "git add .; git commit; git push",
       "tooltip": "Commit and push changes",
       "color": "#CCAAAA"
     },

@@ -104,14 +104,16 @@ async function openProjectConfigFile(): Promise<void> {
         const template = {
             actions: [
                 {
-                    text: "$(play) Run",
-                    command: "npm start",
-                    tooltip: "Start the development server"
+                    text: "$(repo-pull) Pull",
+                    command: "git pull",
+                    tooltip: "Pull changes from the remote repository",
+                    color: "#b0eb93"
                 },
                 {
-                    text: "$(testing-run-icon) Test",
-                    command: "npm test",
-                    tooltip: "Run tests"
+                    text: "$(repo-push) Push",
+                    command: "git add .; git commit; git push",
+                    tooltip: "Add, commit, and push changes to the remote repository",
+                    color: "#ffc384"
                 }
             ]
         };
