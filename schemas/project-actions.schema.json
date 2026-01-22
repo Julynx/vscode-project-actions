@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Project Actions Configuration",
+  "description": "Configuration for the Project Actions VS Code extension. Supports JSON5 format (comments, trailing commas).",
+  "allowComments": true,
+  "allowTrailingCommas": true,
+  "type": "object",
+  "required": ["actions"],
+  "properties": {
+    "actions": {
+      "type": "array",
+      "description": "Array of action buttons to display on the status bar",
+      "items": {
+        "type": "object",
+        "required": ["text", "command"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Button text to display on the status bar. Can include Codicons using $(icon-name) syntax.",
+            "examples": [
+              "$(play) Run",
+              "$(testing-run-icon) Test",
+              "$(package) Build"
+            ]
+          },
+          "command": {
+            "type": "string",
+            "description": "Shell command to execute when the button is clicked. Supports variable substitution like ${file}, ${workspaceFolder}, etc.",
+            "examples": [
+              "npm start",
+              "python ${file}",
+              "docker-compose up -d",
+              "git add ${relativeFile}"
+            ]
+          },
+          "tooltip": {
+            "type": "string",
+            "description": "Optional tooltip to display when hovering over the button. Defaults to the command if not specified.",
+            "examples": [
+              "Start the development server",
+              "Run all tests",
+              "Build for production"
+            ]
+          },
+          "color": {
+            "type": "string",
+            "description": "Optional color for the button text. Can be a hex color code or CSS color name.",
+            "pattern": "^(#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3}|[a-zA-Z]+)$",
+            "examples": [
+              "#00ff00",
+              "#f00",
+              "green",
+              "red"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

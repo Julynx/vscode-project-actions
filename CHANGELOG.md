@@ -1,27 +1,22 @@
-# Change Log
+# Changelog
 
-All notable changes to the "project-actions" extension will be documented in this file.
+## [1.1.0] - 2026-01-22
+
+### Added
+- Variable substitution in commands (`${file}`, `${workspaceFolder}`, etc.)
+- Global actions with glob pattern matching via settings
+- Command Palette support: "Edit Project Actions" and "Edit Global Actions"
+- JSON Schema validation with IntelliSense and autocomplete
+- Automatic config template creation
+
+### Changed
+- Global actions merge with local actions on status bar
+- Hidden files (like `.git`) now matchable via glob patterns
 
 ## [1.0.0] - 2025-12-29
 
 ### Added
-- Initial release of Project Actions extension
-- Display custom action buttons on the status bar
-- Execute shell commands when buttons are clicked
-- Project-specific configuration via `.project-actions.json`
-- Auto-reload when configuration file changes
-- Support for custom button text with Codicons
-- Support for custom tooltips
-- Support for custom button colors
-- Manual reload command: "Project Actions: Reload Configuration"
-- Configurable config file name via settings
-- Comprehensive documentation and examples
-
-### Features
-- Reads configuration from `.project-actions.json` in project root
-- Creates status bar buttons for each defined action
-- Executes commands in VS Code integrated terminal
-- File system watcher for automatic configuration reload
-- Proper error handling and user feedback
-- TypeScript implementation with strict mode
-- Clean disposal of resources on deactivation
+- Custom status bar buttons for project-specific commands
+- Configuration via `.project-actions.json`
+- Auto-reload on config file changes
+- Codicons, tooltips, and custom colors support

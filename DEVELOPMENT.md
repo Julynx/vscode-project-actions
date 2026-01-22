@@ -87,8 +87,9 @@ npx eslint src --ext ts --fix
 project-actions/
 ├── src/
 │   └── extension.ts          # Main extension code
+├── schemas/
+│   └── project-actions.schema.json  # JSON schema for config
 ├── out/                       # Compiled JavaScript (generated)
-├── examples/                  # Example configuration files
 ├── .vscode/
 │   ├── launch.json           # Debug configuration
 │   ├── tasks.json            # Build tasks
@@ -96,7 +97,8 @@ project-actions/
 ├── package.json              # Extension manifest
 ├── tsconfig.json             # TypeScript configuration
 ├── .eslintrc.json            # ESLint configuration
-└── README.md                 # User documentation
+├── README.md                 # User documentation
+└── DEVELOPMENT.md            # Developer documentation
 ```
 
 ## Building for Distribution

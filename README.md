@@ -1,23 +1,24 @@
 # Project Actions
 
-Display project-specific action buttons on the status bar that run custom commands when clicked.
+Add custom action buttons to your VS Code status bar that execute shell commands with a single click.
 
 ![Project Actions Screenshot](assets/screenshot.png)
 
-## Features
+## Contents
 
-- **Custom Status Bar Buttons**: Add project-specific buttons to your VS Code status bar
-- **Command Execution**: Click buttons to execute shell commands in the integrated terminal
-- **Project-Specific Configuration**: Each project can have its own set of actions
-- **Auto-Reload**: Automatically reloads when the configuration file changes
-- **Customizable**: Configure button text, commands, tooltips, and colors
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Variables](#variables)
+- [Global Actions](#global-actions)
+- [Settings](#settings)
 
-## Usage
+## Quick Start
 
-### Basic Setup
+1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+2. Run **"Project Actions: Edit Project Actions"**
+3. Configure your actions in the generated [`.project-actions.json`](.project-actions.json) file
 
-1. Create a `.project-actions.json` file in the root of your project
-2. Define your actions in the following format:
+**Example configuration:**
 
 ```json
 {
@@ -25,133 +26,77 @@ Display project-specific action buttons on the status bar that run custom comman
     {
       "text": "$(play) Run",
       "command": "npm start",
-      "tooltip": "Start the development server"
-    },
-    {
-      "text": "$(testing-run-icon) Test",
-      "command": "npm test",
-      "tooltip": "Run all tests",
-      "color": "#00ff00"
-    },
-    {
-      "text": "$(package) Build",
-      "command": "npm run build",
-      "tooltip": "Build for production"
-    }
-  ]
-}
-```
-
-3. The buttons will automatically appear in your status bar
-
-### Configuration Options
-
-Each action button can have the following properties:
-
-- **text** (required): The text displayed on the button
-  - Can include [Codicons](https://microsoft.github.io/vscode-codicons/dist/codicon.html) using `$(icon-name)` syntax
-- **command** (required): The shell command to execute when clicked
-- **tooltip** (optional): Hover text for the button (defaults to the command)
-- **color** (optional): Text color for the button (CSS color value)
-
-## Examples
-
-### Web Development Project
-
-```json
-{
-  "actions": [
-    {
-      "text": "$(rocket) Dev Server",
-      "command": "npm run dev",
       "tooltip": "Start development server"
     },
     {
       "text": "$(beaker) Test",
       "command": "npm test",
-      "tooltip": "Run tests with coverage"
-    },
-    {
-      "text": "$(package) Build",
-      "command": "npm run build",
-      "tooltip": "Build for production"
-    },
-    {
-      "text": "$(code-review) Lint",
-      "command": "npm run lint",
-      "tooltip": "Run ESLint"
+      "tooltip": "Run tests"
     }
   ]
 }
 ```
 
-### Python Project
+Buttons appear automatically on the status bar and update on file save.
+
+## Configuration
+
+Each action requires:
+
+- **`text`**: Button label (supports [Codicons](https://microsoft.github.io/vscode-codicons/dist/codicon.html) like `$(play)`)
+- **`command`**: Shell command to execute
+- **`tooltip`** *(optional)*: Hover text
+- **`color`** *(optional)*: Text color (CSS format)
+
+## Variables
+
+Use VS Code variables for dynamic commands:
+
+- `${file}` - Current file path
+- `${fileBasename}` - Current filename
+- `${fileDirname}` - Current file's directory
+- `${workspaceFolder}` - Workspace root path
+- `${relativeFile}` - File path relative to workspace
+
+**Example:**
 
 ```json
 {
-  "actions": [
-    {
-      "text": "$(play) Run",
-      "command": "uv run main.py",
-      "tooltip": "Run main script"
-    },
-    {
-      "text": "$(testing-run-icon) Test",
-      "command": "uv run pytest",
-      "tooltip": "Run pytest"
-    },
-    {
-      "text": "$(code-review) Format",
-      "command": "uv run black . && uv run pylint .",
-      "tooltip": "Format code and run linter"
-    }
-  ]
+  "text": "$(play) Run File",
+  "command": "python ${file}",
+  "tooltip": "Run current Python file"
 }
 ```
 
-### Docker Project
+[See all variables](https://code.visualstudio.com/docs/editor/variables-reference)
+
+## Global Actions
+
+Define actions in VS Code settings that appear based on file patterns:
+
+1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+2. Run **"Project Actions: Edit Global Actions"**
+3. Add global actions as follows:
 
 ```json
 {
-  "actions": [
+  "project-actions.globalActions": [
     {
-      "text": "$(vm-running) Up",
-      "command": "docker-compose up -d",
-      "tooltip": "Start containers",
-      "color": "#00ff00"
-    },
-    {
-      "text": "$(debug-stop) Down",
-      "command": "docker-compose down",
-      "tooltip": "Stop containers",
-      "color": "#ff0000"
-    },
-    {
-      "text": "$(output) Logs",
-      "command": "docker-compose logs -f",
-      "tooltip": "View container logs"
+      "text": "$(repo-pull) Pull",
+      "command": "git pull",
+      "glob": "**/.git",
+      "tooltip": "Pull latest changes"
     }
   ]
 }
 ```
 
-## Tips
+Global actions appear when the `glob` pattern matches files in your workspace (e.g., `**/.git` shows the action in Git repositories).
 
-- Use [Codicons](https://microsoft.github.io/vscode-codicons/dist/codicon.html) to make your buttons visually distinct
-- The configuration file is watched for changes, so edits take effect immediately
-- Commands are executed in the VS Code integrated terminal
-- You can use shell operators like `&&` to chain multiple commands
-- Buttons appear from left to right in the order they're defined
+## Settings
 
-## Extension Settings
-
-This extension contributes the following settings:
-
-- `project-actions.configFileName`: Name of the configuration file (default: `.project-actions.json`)
-
-## Requirements
-
-- VS Code 1.85.0 or higher
+- `project-actions.configFileName`: Config file name (default: `.project-actions.json`)
+- `project-actions.globalActions`: Global actions with glob patterns
 
 ## License
 

@@ -1,8 +1,8 @@
 {
   "name": "project-actions",
   "displayName": "Project Actions",
-  "description": "Display project-specific action buttons on the status bar that run custom commands defined in .project-actions.json",
-  "version": "1.0.5",
+  "description": "Add custom action buttons to the status bar that execute shell commands",
+  "version": "1.1.0",
   "publisher": "julynx",
   "author": {
     "name": "Julynx",
@@ -38,10 +38,25 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "id": "json5",
+        "filenames": [".project-actions.json"],
+        "filenamePatterns": ["**/project-actions.json"]
+      }
+    ],
     "commands": [
       {
         "command": "project-actions.reload",
         "title": "Project Actions: Reload Configuration"
+      },
+      {
+        "command": "project-actions.editProjectActions",
+        "title": "Project Actions: Edit Project Actions"
+      },
+      {
+        "command": "project-actions.editGlobalActions",
+        "title": "Project Actions: Edit Global Actions"
       }
     ],
     "configuration": {
@@ -51,9 +66,46 @@
           "type": "string",
           "default": ".project-actions.json",
           "description": "Name of the configuration file to look for in the project root"
+        },
+        "project-actions.globalActions": {
+          "type": "array",
+          "default": [],
+          "description": "Global actions that are displayed when glob patterns match files in the workspace",
+          "items": {
+            "type": "object",
+            "required": ["text", "command", "glob"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Button text to display on the status bar"
+              },
+              "command": {
+                "type": "string",
+                "description": "Shell command to execute when the button is clicked"
+              },
+              "glob": {
+                "type": "string",
+                "description": "Glob pattern to match against workspace files (e.g., '**/.git' to match projects with a .git folder)"
+              },
+              "tooltip": {
+                "type": "string",
+                "description": "Optional tooltip to display when hovering over the button"
+              },
+              "color": {
+                "type": "string",
+                "description": "Optional color for the button text (e.g., '#FF0000' for red)"
+              }
+            }
+          }
         }
       }
-    }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": ".project-actions.json",
+        "url": "./schemas/project-actions.schema.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -64,6 +116,7 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
+    "@types/glob": "^8.1.0",
     "@types/node": "^20.10.0",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
@@ -72,6 +125,7 @@
     "typescript": "^5.3.0"
   },
   "dependencies": {
+    "glob": "^11.0.0",
     "json5": "^2.2.3"
   }
 }
