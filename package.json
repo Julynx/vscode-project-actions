@@ -2,7 +2,7 @@
   "name": "project-actions",
   "displayName": "Project Actions",
   "description": "Add custom action buttons to the status bar that execute shell commands",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "publisher": "julynx",
   "author": {
     "name": "Julynx",
@@ -36,7 +36,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
@@ -61,6 +61,10 @@
       {
         "command": "project-actions.editGlobalActions",
         "title": "Project Actions: Edit Global Actions"
+      },
+      {
+        "command": "project-actions.editActiveFileActions",
+        "title": "Project Actions: Edit Active File Actions"
       }
     ],
     "configuration": {
@@ -104,6 +108,40 @@
               }
             }
           }
+        },
+        "project-actions.activeFileActions": {
+          "type": "array",
+          "default": [],
+          "description": "Actions that are displayed based on the currently active file matching a glob pattern",
+          "items": {
+            "type": "object",
+            "required": [
+              "text",
+              "command"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Button text to display on the status bar"
+              },
+              "command": {
+                "type": "string",
+                "description": "Shell command to execute when the button is clicked"
+              },
+              "glob": {
+                "type": "string",
+                "description": "Glob pattern to match against the active file path (e.g., '**/*.ts'). If omitted, the action is shown for all files."
+              },
+              "tooltip": {
+                "type": "string",
+                "description": "Optional tooltip to display when hovering over the button"
+              },
+              "color": {
+                "type": "string",
+                "description": "Optional color for the button text (e.g., '#FF0000' for red)"
+              }
+            }
+          }
         }
       }
     },
@@ -115,10 +153,13 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "vscode:prepublish": "npm run package",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "node esbuild.js --production",
+    "compile-tests": "tsc -p . -outDir out",
+    "watch-tests": "tsc -p . -outDir out -watch",
+    "pretest": "npm run compile-tests && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js"
   },
@@ -128,11 +169,13 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
+    "esbuild": "^0.27.2",
     "eslint": "^8.54.0",
     "typescript": "^5.3.0"
   },
   "dependencies": {
     "glob": "^11.0.0",
-    "json5": "^2.2.3"
+    "json5": "^2.2.3",
+    "minimatch": "^10.1.1"
   }
 }

@@ -2,7 +2,25 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as glob from 'glob';
+import { minimatch } from 'minimatch';
 import JSON5 from 'json5';
+
+const DEFAULT_CONFIG_TEMPLATE = {
+    actions: [
+        {
+            text: "$(repo-pull) Pull",
+            command: "git pull",
+            tooltip: "Pull changes from the remote repository",
+            color: "#b0eb93"
+        },
+        {
+            text: "$(repo-push) Push",
+            command: "git add .; git commit; git push",
+            tooltip: "Add, commit, and push changes to the remote repository",
+            color: "#ffc384"
+        }
+    ]
+};
 
 interface ActionButton {
     text: string;
@@ -11,7 +29,7 @@ interface ActionButton {
     color?: string;
 }
 
-interface GlobalActionButton extends ActionButton {
+interface ConfiguredActionButton extends ActionButton {
     glob?: string;
 }
 
@@ -19,8 +37,16 @@ interface ProjectActionsConfig {
     actions: ActionButton[];
 }
 
-let statusBarItems: vscode.StatusBarItem[] = [];
-let commandDisposables: vscode.Disposable[] = [];
+interface ActionItem {
+    item: vscode.StatusBarItem;
+    disposable: vscode.Disposable;
+}
+
+let activeFileItems: ActionItem[] = [];
+let projectItems: ActionItem[] = [];
+let globalItems: ActionItem[] = [];
+let activeSeparator: vscode.StatusBarItem | undefined;
+let projectSeparator: vscode.StatusBarItem | undefined;
 let fileWatcher: vscode.FileSystemWatcher | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -37,11 +63,18 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('project-actions.editGlobalActions', async () => {
             await openGlobalSettings();
         }),
+        vscode.commands.registerCommand('project-actions.editActiveFileActions', async () => {
+            await openActiveFileSettings();
+        }),
         vscode.workspace.onDidChangeConfiguration((event) => {
-            if (event.affectsConfiguration('project-actions.globalActions')) {
-                console.log('Global actions configuration changed, reloading...');
+            if (event.affectsConfiguration('project-actions.globalActions') ||
+                event.affectsConfiguration('project-actions.activeFileActions')) {
+                console.log('Configuration changed, reloading...');
                 reloadActions();
             }
+        }),
+        vscode.window.onDidChangeActiveTextEditor(() => {
+            updateActiveFileActions();
         })
     );
 
@@ -50,8 +83,7 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {
-    disposeStatusBarItems();
-    disposeCommandDisposables();
+    disposeAllItems();
     fileWatcher?.dispose();
 }
 
@@ -67,9 +99,9 @@ function setupFileWatcher(context: vscode.ExtensionContext): void {
     const configFileName = getConfigFileName();
     const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
     const pattern = new vscode.RelativePattern(workspaceRoot, configFileName);
-    
+
     fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
-    
+
     fileWatcher.onDidChange(() => reloadActions());
     fileWatcher.onDidCreate(() => reloadActions());
     fileWatcher.onDidDelete(() => {
@@ -101,25 +133,8 @@ async function openProjectConfigFile(): Promise<void> {
 
     // Create the file with a template if it doesn't exist
     if (!fs.existsSync(configPath)) {
-        const template = {
-            actions: [
-                {
-                    text: "$(repo-pull) Pull",
-                    command: "git pull",
-                    tooltip: "Pull changes from the remote repository",
-                    color: "#b0eb93"
-                },
-                {
-                    text: "$(repo-push) Push",
-                    command: "git add .; git commit; git push",
-                    tooltip: "Add, commit, and push changes to the remote repository",
-                    color: "#ffc384"
-                }
-            ]
-        };
-
         try {
-            fs.writeFileSync(configPath, JSON.stringify(template, null, 2), 'utf8');
+            fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG_TEMPLATE, null, 2), 'utf8');
             console.log(`Created new configuration file: ${configPath}`);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -146,6 +161,13 @@ async function openGlobalSettings(): Promise<void> {
 }
 
 /**
+ * Opens the VS Code settings UI focused on the active file actions configuration.
+ */
+async function openActiveFileSettings(): Promise<void> {
+    await vscode.commands.executeCommand('workbench.action.openSettings', 'project-actions.activeFileActions');
+}
+
+/**
  * Checks if a glob pattern matches any files/folders in the workspace.
  * Uses Node's glob package directly to bypass VSCode's file.exclude settings,
  * allowing patterns like "**\/.git" to match even though .git is typically excluded.
@@ -159,7 +181,7 @@ async function matchesGlobPattern(workspaceRoot: string, globPattern: string): P
             absolute: false,
             withFileTypes: false
         });
-        
+
         return matches.length > 0;
     } catch (error) {
         console.error(`Error matching glob pattern '${globPattern}':`, error);
@@ -171,40 +193,30 @@ async function matchesGlobPattern(workspaceRoot: string, globPattern: string): P
  * Retrieves global actions from settings and filters them based on glob pattern matching.
  * Returns only actions whose glob patterns match at least one file/folder in the workspace.
  */
-async function getMatchingGlobalActions(workspaceRoot: string): Promise<ActionButton[]> {
+async function getMatchingGlobalActions(workspaceRoot: string): Promise<ConfiguredActionButton[]> {
     const config = vscode.workspace.getConfiguration('project-actions');
-    const globalActions = config.get<GlobalActionButton[]>('globalActions', []);
-    
-    const matchingActions: ActionButton[] = [];
-    
+    const globalActions = config.get<ConfiguredActionButton[]>('globalActions', []);
+
+    const matchingActions: ConfiguredActionButton[] = [];
+
     for (const action of globalActions) {
         if (!isValidAction(action)) {
             console.warn('Skipping invalid global action:', action);
             continue;
         }
-        
+
         // If no glob pattern is specified, always show the action
         if (!action.glob) {
-            matchingActions.push({
-                text: action.text,
-                command: action.command,
-                tooltip: action.tooltip,
-                color: action.color
-            });
+            matchingActions.push(action);
             continue;
         }
-        
+
         // If glob pattern is specified, check if it matches
         if (await matchesGlobPattern(workspaceRoot, action.glob)) {
-            matchingActions.push({
-                text: action.text,
-                command: action.command,
-                tooltip: action.tooltip,
-                color: action.color
-            });
+            matchingActions.push(action);
         }
     }
-    
+
     return matchingActions;
 }
 
@@ -251,23 +263,21 @@ function isValidAction(action: Partial<ActionButton>): action is ActionButton {
  * Creates a status bar item for the given action and registers its command.
  * Returns the status bar item and command disposable for cleanup.
  */
-function createStatusBarItem(action: ActionButton, index: number): {
-    item: vscode.StatusBarItem;
-    disposable: vscode.Disposable;
-} {
+function createStatusBarItem(action: ActionButton, priority: number, idSuffix: string): ActionItem {
     const statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,
-        1000 - index
+        priority
     );
 
     statusBarItem.text = action.text;
     statusBarItem.tooltip = action.tooltip || action.command;
-    
+
     if (action.color) {
         statusBarItem.color = action.color;
     }
 
-    const commandId = `project-actions.action-${index}`;
+    // Use a unique command ID to avoid collisions
+    const commandId = `project-actions.action-${idSuffix}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const disposable = vscode.commands.registerCommand(commandId, () => {
         executeAction(action.command);
     });
@@ -278,28 +288,42 @@ function createStatusBarItem(action: ActionButton, index: number): {
     return { item: statusBarItem, disposable };
 }
 
+function createActionItems(actions: ConfiguredActionButton[], startPriority: number, idPrefix: string): ActionItem[] {
+    const items: ActionItem[] = [];
+    let index = 0;
+    for (const action of actions) {
+        if (isValidAction(action)) {
+            items.push(createStatusBarItem(action, startPriority - index++, `${idPrefix}-${index}`));
+        }
+    }
+    return items;
+}
+
 /**
- * Creates a visual separator status bar item to distinguish between local and global actions.
+ * Creates a visual separator status bar item.
  */
-function createSeparator(index: number): vscode.StatusBarItem {
+function createSeparator(priority: number): vscode.StatusBarItem {
     const separator = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,
-        1000 - index
+        priority
     );
     separator.text = ':';
-    separator.tooltip = 'Separator between local and global actions';
+    separator.tooltip = 'Separator';
     separator.show();
     return separator;
 }
 
 /**
- * Main function that loads and displays all actions (local + global).
- * Clears existing actions before loading to ensure a clean state.
- * Adds a visual separator between local and global actions when both are present.
+ * Main function that loads and displays all actions.
  */
 async function reloadActions(): Promise<void> {
-    disposeStatusBarItems();
-    disposeCommandDisposables();
+    // Dispose static items
+    disposeItems(projectItems);
+    projectItems = [];
+    disposeItems(globalItems);
+    globalItems = [];
+    projectSeparator?.dispose();
+    projectSeparator = undefined;
 
     if (!vscode.workspace.workspaceFolders) {
         console.log('No workspace folder open');
@@ -307,45 +331,91 @@ async function reloadActions(): Promise<void> {
     }
 
     const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
+
+    // Load Project Actions
     const localActions = loadLocalActions(workspaceRoot);
+    projectItems = createActionItems(localActions, 200, 'project');
+
+    // Load Global Actions
     const globalActions = await getMatchingGlobalActions(workspaceRoot).catch(error => {
         console.error('Error loading global actions:', error);
         return [];
     });
+    globalItems = createActionItems(globalActions, 100, 'global');
 
-    let index = 0;
-
-    // Display local actions
-    localActions.forEach((action) => {
-        if (!isValidAction(action)) {
-            console.warn('Skipping invalid local action:', action);
-            return;
-        }
-
-        const { item, disposable } = createStatusBarItem(action, index++);
-        statusBarItems.push(item);
-        commandDisposables.push(disposable);
-    });
-
-    // Add separator if both local and global actions exist
-    if (localActions.length > 0 && globalActions.length > 0) {
-        const separator = createSeparator(index++);
-        statusBarItems.push(separator);
+    // Create separator between Project and Global if both exist
+    if (projectItems.length > 0 && globalItems.length > 0) {
+        projectSeparator = createSeparator(150);
     }
 
-    // Display global actions
-    globalActions.forEach((action) => {
+    // Update Active File Actions
+    updateActiveFileActions();
+
+    console.log(`Loaded ${projectItems.length} project, ${globalItems.length} global actions`);
+}
+
+function updateActiveFileActions(): void {
+    // Dispose active items
+    disposeItems(activeFileItems);
+    activeFileItems = [];
+    activeSeparator?.dispose();
+    activeSeparator = undefined;
+
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+
+    const config = vscode.workspace.getConfiguration('project-actions');
+    const activeActions = config.get<ConfiguredActionButton[]>('activeFileActions', []);
+    const filePath = editor.document.uri.fsPath;
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+
+    let relativePath = filePath;
+    if (workspaceFolder) {
+        relativePath = path.relative(workspaceFolder.uri.fsPath, filePath);
+    }
+    // Normalize path separators for minimatch
+    relativePath = relativePath.split(path.sep).join('/');
+
+    let index = 0;
+    activeActions.forEach(action => {
         if (!isValidAction(action)) {
-            console.warn('Skipping invalid global action:', action);
             return;
         }
 
-        const { item, disposable } = createStatusBarItem(action, index++);
-        statusBarItems.push(item);
-        commandDisposables.push(disposable);
+        let matches = true;
+        if (action.glob) {
+            matches = minimatch(relativePath, action.glob, { dot: true });
+        }
+
+        if (matches) {
+            activeFileItems.push(createStatusBarItem(action, 300 - index++, `active-${index}`));
+        }
     });
 
-    console.log(`Total ${statusBarItems.length} item(s) displayed (${localActions.length} local, ${globalActions.length} global)`);
+    // Create separator if active items exist AND (project OR global items exist)
+    if (activeFileItems.length > 0 && (projectItems.length > 0 || globalItems.length > 0)) {
+        activeSeparator = createSeparator(250);
+    }
+}
+
+function disposeItems(items: ActionItem[]): void {
+    items.forEach(i => {
+        i.item.dispose();
+        i.disposable.dispose();
+    });
+}
+
+function disposeAllItems(): void {
+    disposeItems(activeFileItems);
+    activeFileItems = [];
+    disposeItems(projectItems);
+    projectItems = [];
+    disposeItems(globalItems);
+    globalItems = [];
+    activeSeparator?.dispose();
+    projectSeparator?.dispose();
 }
 
 /**
@@ -355,15 +425,15 @@ async function reloadActions(): Promise<void> {
 function resolveVariables(command: string): string {
     const editor = vscode.window.activeTextEditor;
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    
+
     let resolved = command;
-    
+
     // Workspace-related variables
     if (workspaceFolder) {
         resolved = resolved.replace(/\$\{workspaceFolder\}/g, workspaceFolder.uri.fsPath);
         resolved = resolved.replace(/\$\{workspaceFolderBasename\}/g, path.basename(workspaceFolder.uri.fsPath));
     }
-    
+
     // File-related variables (require an active editor)
     if (editor?.document) {
         const filePath = editor.document.uri.fsPath;
@@ -371,14 +441,14 @@ function resolveVariables(command: string): string {
         const fileName = path.basename(filePath);
         const fileNameNoExt = path.basename(filePath, path.extname(filePath));
         const fileExt = path.extname(filePath);
-        
+
         // Resolve file path
         resolved = resolved.replace(/\$\{file\}/g, filePath);
         resolved = resolved.replace(/\$\{fileBasename\}/g, fileName);
         resolved = resolved.replace(/\$\{fileBasenameNoExtension\}/g, fileNameNoExt);
         resolved = resolved.replace(/\$\{fileExtname\}/g, fileExt);
         resolved = resolved.replace(/\$\{fileDirname\}/g, fileDir);
-        
+
         // Resolve relative file path
         if (workspaceFolder) {
             const relativePath = path.relative(workspaceFolder.uri.fsPath, filePath);
@@ -386,23 +456,23 @@ function resolveVariables(command: string): string {
             resolved = resolved.replace(/\$\{relativeFile\}/g, relativePath);
             resolved = resolved.replace(/\$\{relativeFileDirname\}/g, relativeDir);
         }
-        
+
         // Resolve selection-related variables
         const selection = editor.selection;
         if (!selection.isEmpty) {
             const selectedText = editor.document.getText(selection);
             resolved = resolved.replace(/\$\{selectedText\}/g, selectedText);
         }
-        
+
         // Line number (1-based)
         const lineNumber = selection.active.line + 1;
         resolved = resolved.replace(/\$\{lineNumber\}/g, lineNumber.toString());
     }
-    
+
     // Current working directory
     const cwd = workspaceFolder?.uri.fsPath || process.cwd();
     resolved = resolved.replace(/\$\{cwd\}/g, cwd);
-    
+
     return resolved;
 }
 
@@ -411,14 +481,4 @@ function executeAction(command: string): void {
     const terminal = vscode.window.createTerminal('Project Actions');
     terminal.show();
     terminal.sendText(resolvedCommand);
-}
-
-function disposeCommandDisposables(): void {
-    commandDisposables.forEach(disposable => disposable.dispose());
-    commandDisposables = [];
-}
-
-function disposeStatusBarItems(): void {
-    statusBarItems.forEach(item => item.dispose());
-    statusBarItems = [];
 }

@@ -15,7 +15,7 @@
     {
       "text": "$(tools) Compile",
       "command": "npm run compile",
-      "tooltip": "Compile TypeScript",
+      "tooltip": "Bundle Extension",
       "color": "#CCAA00"
     },
     {

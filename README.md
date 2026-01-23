@@ -10,6 +10,7 @@ Add custom action buttons to your VS Code status bar that execute shell commands
 - [Configuration](#configuration)
 - [Variables](#variables)
 - [Global Actions](#global-actions)
+- [Active File Actions](#active-file-actions)
 - [Settings](#settings)
 
 ## Quick Start
@@ -92,6 +93,29 @@ Define actions in VS Code settings that appear based on file patterns:
 ```
 
 Global actions appear when the `glob` pattern matches files in your workspace (e.g., `**/.git` shows the action in Git repositories).
+
+## Active File Actions
+
+Define actions in VS Code settings that appear based on the currently active file:
+
+1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+2. Run **"Project Actions: Edit Active File Actions"**
+3. Add active file actions as follows:
+
+```json
+{
+  "project-actions.activeFileActions": [
+    {
+      "text": "$(python) Run Python",
+      "command": "python ${file}",
+      "glob": "**/*.py",
+      "tooltip": "Run current Python file"
+    }
+  ]
+}
+```
+
+Active file actions appear when the `glob` pattern matches the currently open file (e.g., `**/*.py` shows the action only when editing Python files).
 
 ## Settings
 
