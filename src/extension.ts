@@ -75,6 +75,9 @@ export function activate(context: vscode.ExtensionContext): void {
         }),
         vscode.window.onDidChangeActiveTextEditor(() => {
             updateActiveFileActions();
+        }),
+        vscode.window.tabGroups.onDidChangeTabs(() => {
+            updateActiveFileActions();
         })
     );
 
@@ -354,6 +357,26 @@ async function reloadActions(): Promise<void> {
     console.log(`Loaded ${projectItems.length} project, ${globalItems.length} global actions`);
 }
 
+function getActiveFileUri(): vscode.Uri | undefined {
+    // Try active text editor first
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        return editor.document.uri;
+    }
+
+    // Fallback to active tab if it's a file
+    const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+    const input = activeTab?.input;
+
+    if (input instanceof vscode.TabInputText ||
+        input instanceof vscode.TabInputCustom ||
+        input instanceof vscode.TabInputNotebook) {
+        return input.uri;
+    }
+
+    return undefined;
+}
+
 function updateActiveFileActions(): void {
     // Dispose active items
     disposeItems(activeFileItems);
@@ -361,15 +384,15 @@ function updateActiveFileActions(): void {
     activeSeparator?.dispose();
     activeSeparator = undefined;
 
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
+    const activeUri = getActiveFileUri();
+    if (!activeUri) {
         return;
     }
 
     const config = vscode.workspace.getConfiguration('project-actions');
     const activeActions = config.get<ConfiguredActionButton[]>('activeFileActions', []);
-    const filePath = editor.document.uri.fsPath;
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+    const filePath = activeUri.fsPath;
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(activeUri);
 
     let relativePath = filePath;
     if (workspaceFolder) {
@@ -423,7 +446,7 @@ function disposeAllItems(): void {
  * Supports common variables like ${workspaceFolder}, ${file}, ${relativeFile}, etc.
  */
 function resolveVariables(command: string): string {
-    const editor = vscode.window.activeTextEditor;
+    const activeUri = getActiveFileUri();
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 
     let resolved = command;
@@ -434,9 +457,9 @@ function resolveVariables(command: string): string {
         resolved = resolved.replace(/\$\{workspaceFolderBasename\}/g, path.basename(workspaceFolder.uri.fsPath));
     }
 
-    // File-related variables (require an active editor)
-    if (editor?.document) {
-        const filePath = editor.document.uri.fsPath;
+    // File-related variables
+    if (activeUri) {
+        const filePath = activeUri.fsPath;
         const fileDir = path.dirname(filePath);
         const fileName = path.basename(filePath);
         const fileNameNoExt = path.basename(filePath, path.extname(filePath));
@@ -457,16 +480,19 @@ function resolveVariables(command: string): string {
             resolved = resolved.replace(/\$\{relativeFileDirname\}/g, relativeDir);
         }
 
-        // Resolve selection-related variables
-        const selection = editor.selection;
-        if (!selection.isEmpty) {
-            const selectedText = editor.document.getText(selection);
-            resolved = resolved.replace(/\$\{selectedText\}/g, selectedText);
-        }
+        // Resolve selection-related variables (require an active editor)
+        const editor = vscode.window.activeTextEditor;
+        if (editor && editor.document.uri.toString() === activeUri.toString()) {
+            const selection = editor.selection;
+            if (!selection.isEmpty) {
+                const selectedText = editor.document.getText(selection);
+                resolved = resolved.replace(/\$\{selectedText\}/g, selectedText);
+            }
 
-        // Line number (1-based)
-        const lineNumber = selection.active.line + 1;
-        resolved = resolved.replace(/\$\{lineNumber\}/g, lineNumber.toString());
+            // Line number (1-based)
+            const lineNumber = selection.active.line + 1;
+            resolved = resolved.replace(/\$\{lineNumber\}/g, lineNumber.toString());
+        }
     }
 
     // Current working directory
