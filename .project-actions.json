@@ -31,12 +31,6 @@
       "color": "#AACC00"
     },
     {
-      "text": "$(repo-push) Push",
-      "command": "git add .; git commit; git push",
-      "tooltip": "Commit and push changes",
-      "color": "#CCAAAA"
-    },
-    {
       "text": "$(cloud-upload) Publish",
       "command": "npx vsce publish",
       "tooltip": "Publish extension to Marketplace",

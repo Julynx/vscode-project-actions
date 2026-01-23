@@ -73,8 +73,8 @@ function setupFileWatcher(context: vscode.ExtensionContext): void {
     fileWatcher.onDidChange(() => reloadActions());
     fileWatcher.onDidCreate(() => reloadActions());
     fileWatcher.onDidDelete(() => {
-        console.log('Configuration file deleted, clearing actions...');
-        disposeStatusBarItems();
+        console.log('Configuration file deleted, reloading actions...');
+        reloadActions();
     });
 
     context.subscriptions.push(fileWatcher);
