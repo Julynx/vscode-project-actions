@@ -4,14 +4,14 @@ Add custom action buttons to your VS Code status bar that execute shell commands
 
 ![Project Actions Screenshot](assets/screenshot.png)
 
-## Contents
+## Table of Contents
 
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Variables](#variables)
-- [Global Actions](#global-actions)
-- [Active File Actions](#active-file-actions)
-- [Settings](#settings)
+- [Project Actions](#project-actions)
+  - [Quick Start](#quick-start)
+    - [Action Syntax](#action-syntax)
+    - [Command Variables](#command-variables)
+  - [Global Actions](#global-actions)
+  - [Active File Actions](#active-file-actions)
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ Add custom action buttons to your VS Code status bar that execute shell commands
 2. Run **"Project Actions: Edit Project Actions"**
 3. Configure your actions in the generated [`.project-actions.json`](.project-actions.json) file
 
-**Example configuration:**
+**Example:**
 
 ```json
 {
@@ -40,7 +40,7 @@ Add custom action buttons to your VS Code status bar that execute shell commands
 
 Buttons appear automatically on the status bar and update on file save.
 
-## Configuration
+### Action Syntax
 
 Each action requires:
 
@@ -49,7 +49,7 @@ Each action requires:
 - **`tooltip`** *(optional)*: Hover text
 - **`color`** *(optional)*: Text color (CSS format)
 
-## Variables
+### Command Variables
 
 Use VS Code variables for dynamic commands:
 
@@ -121,6 +121,7 @@ Active file actions appear when the `glob` pattern matches the currently open fi
 
 - `project-actions.configFileName`: Config file name (default: `.project-actions.json`)
 - `project-actions.globalActions`: Global actions with glob patterns
+- `project-actions.activeFileActions`: Active file actions with glob patterns
 
 ## License
 
