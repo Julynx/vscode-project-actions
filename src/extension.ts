@@ -49,6 +49,8 @@ let activeSeparator: vscode.StatusBarItem | undefined;
 let projectSeparator: vscode.StatusBarItem | undefined;
 let fileWatcher: vscode.FileSystemWatcher | undefined;
 
+let isReloading = false;
+
 export function activate(context: vscode.ExtensionContext): void {
     console.log('Project Actions extension is now active');
 
@@ -320,41 +322,52 @@ function createSeparator(priority: number): vscode.StatusBarItem {
  * Main function that loads and displays all actions.
  */
 async function reloadActions(): Promise<void> {
-    // Dispose static items
-    disposeItems(projectItems);
-    projectItems = [];
-    disposeItems(globalItems);
-    globalItems = [];
-    projectSeparator?.dispose();
-    projectSeparator = undefined;
-
-    if (!vscode.workspace.workspaceFolders) {
-        console.log('No workspace folder open');
+    if (isReloading) {
         return;
     }
+    isReloading = true;
 
-    const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    try {
+        // Dispose static items
+        disposeItems(projectItems);
+        projectItems = [];
+        disposeItems(globalItems);
+        globalItems = [];
+        projectSeparator?.dispose();
+        projectSeparator = undefined;
 
-    // Load Project Actions
-    const localActions = loadLocalActions(workspaceRoot);
-    projectItems = createActionItems(localActions, 200, 'project');
+        if (!vscode.workspace.workspaceFolders) {
+            console.log('No workspace folder open');
+            // Still need to update active file actions to clear them
+            updateActiveFileActions();
+            return;
+        }
 
-    // Load Global Actions
-    const globalActions = await getMatchingGlobalActions(workspaceRoot).catch(error => {
-        console.error('Error loading global actions:', error);
-        return [];
-    });
-    globalItems = createActionItems(globalActions, 100, 'global');
+        const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-    // Create separator between Project and Global if both exist
-    if (projectItems.length > 0 && globalItems.length > 0) {
-        projectSeparator = createSeparator(150);
+        // Load Project Actions
+        const localActions = loadLocalActions(workspaceRoot);
+        projectItems = createActionItems(localActions, 200, 'project');
+
+        // Load Global Actions
+        const globalActions = await getMatchingGlobalActions(workspaceRoot).catch(error => {
+            console.error('Error loading global actions:', error);
+            return [];
+        });
+        globalItems = createActionItems(globalActions, 100, 'global');
+
+        // Create separator between Project and Global if both exist
+        if (projectItems.length > 0 && globalItems.length > 0) {
+            projectSeparator = createSeparator(150);
+        }
+
+        // Update Active File Actions
+        updateActiveFileActions();
+
+        console.log(`Loaded ${projectItems.length} project, ${globalItems.length} global actions`);
+    } finally {
+        isReloading = false;
     }
-
-    // Update Active File Actions
-    updateActiveFileActions();
-
-    console.log(`Loaded ${projectItems.length} project, ${globalItems.length} global actions`);
 }
 
 function getActiveFileUri(): vscode.Uri | undefined {
@@ -377,7 +390,14 @@ function getActiveFileUri(): vscode.Uri | undefined {
     return undefined;
 }
 
+let isUpdatingActiveFile = false;
+
 function updateActiveFileActions(): void {
+    if (isUpdatingActiveFile) {
+        return;
+    }
+    isUpdatingActiveFile = true;
+
     // Dispose active items
     disposeItems(activeFileItems);
     activeFileItems = [];
@@ -421,6 +441,8 @@ function updateActiveFileActions(): void {
     if (activeFileItems.length > 0 && (projectItems.length > 0 || globalItems.length > 0)) {
         activeSeparator = createSeparator(250);
     }
+
+    isUpdatingActiveFile = false;
 }
 
 function disposeItems(items: ActionItem[]): void {
