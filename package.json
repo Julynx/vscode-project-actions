@@ -2,7 +2,7 @@
   "name": "project-actions",
   "displayName": "Project Actions",
   "description": "Add custom action buttons to the status bar that execute shell commands",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "publisher": "julynx",
   "author": {
     "name": "Julynx",
