@@ -49,8 +49,6 @@ let activeSeparator: vscode.StatusBarItem | undefined;
 let projectSeparator: vscode.StatusBarItem | undefined;
 let fileWatcher: vscode.FileSystemWatcher | undefined;
 
-let isReloading = false;
-
 export function activate(context: vscode.ExtensionContext): void {
     console.log('Project Actions extension is now active');
 
@@ -76,9 +74,6 @@ export function activate(context: vscode.ExtensionContext): void {
             }
         }),
         vscode.window.onDidChangeActiveTextEditor(() => {
-            updateActiveFileActions();
-        }),
-        vscode.window.tabGroups.onDidChangeTabGroups(() => {
             updateActiveFileActions();
         }),
         vscode.window.tabGroups.onDidChangeTabs(() => {
@@ -324,10 +319,19 @@ function createSeparator(priority: number): vscode.StatusBarItem {
 /**
  * Main function that loads and displays all actions.
  */
+let isReloading = false;
+let pendingReload = false;
+
+/**
+ * Main function that loads and displays all actions.
+ * Uses a lock to prevent concurrent reloads which could cause button duplication.
+ */
 async function reloadActions(): Promise<void> {
     if (isReloading) {
+        pendingReload = true;
         return;
     }
+
     isReloading = true;
 
     try {
@@ -341,8 +345,6 @@ async function reloadActions(): Promise<void> {
 
         if (!vscode.workspace.workspaceFolders) {
             console.log('No workspace folder open');
-            // Still need to update active file actions to clear them
-            updateActiveFileActions();
             return;
         }
 
@@ -370,6 +372,10 @@ async function reloadActions(): Promise<void> {
         console.log(`Loaded ${projectItems.length} project, ${globalItems.length} global actions`);
     } finally {
         isReloading = false;
+        if (pendingReload) {
+            pendingReload = false;
+            reloadActions();
+        }
     }
 }
 
@@ -394,11 +400,14 @@ function getActiveFileUri(): vscode.Uri | undefined {
 }
 
 let isUpdatingActiveFile = false;
+let pendingUpdateActiveFile = false;
 
 function updateActiveFileActions(): void {
     if (isUpdatingActiveFile) {
+        pendingUpdateActiveFile = true;
         return;
     }
+
     isUpdatingActiveFile = true;
 
     // Dispose active items
@@ -446,6 +455,10 @@ function updateActiveFileActions(): void {
     }
 
     isUpdatingActiveFile = false;
+    if (pendingUpdateActiveFile) {
+        pendingUpdateActiveFile = false;
+        updateActiveFileActions();
+    }
 }
 
 function disposeItems(items: ActionItem[]): void {
