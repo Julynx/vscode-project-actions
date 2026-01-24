@@ -406,15 +406,7 @@ function updateActiveFileActions(): void {
 
     const config = vscode.workspace.getConfiguration('project-actions');
     const activeActions = config.get<ConfiguredActionButton[]>('activeFileActions', []);
-    const filePath = activeUri.fsPath;
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(activeUri);
-
-    let relativePath = filePath;
-    if (workspaceFolder) {
-        relativePath = path.relative(workspaceFolder.uri.fsPath, filePath);
-    }
-    // Normalize path separators for minimatch
-    relativePath = relativePath.split(path.sep).join('/');
+    const fileName = path.basename(activeUri.fsPath);
 
     let index = 0;
     activeActions.forEach(action => {
@@ -424,7 +416,7 @@ function updateActiveFileActions(): void {
 
         let matches = true;
         if (action.glob) {
-            matches = minimatch(relativePath, action.glob, { dot: true });
+            matches = minimatch(fileName, action.glob, { dot: true });
         }
 
         if (matches) {
