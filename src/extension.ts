@@ -319,64 +319,57 @@ function createSeparator(priority: number): vscode.StatusBarItem {
 /**
  * Main function that loads and displays all actions.
  */
-let isReloading = false;
-let pendingReload = false;
+let reloadToken = 0;
 
 /**
  * Main function that loads and displays all actions.
- * Uses a lock to prevent concurrent reloads which could cause button duplication.
  */
 async function reloadActions(): Promise<void> {
-    if (isReloading) {
-        pendingReload = true;
+    const currentToken = ++reloadToken;
+
+    // Dispose static items
+    disposeItems(projectItems);
+    projectItems = [];
+    disposeItems(globalItems);
+    globalItems = [];
+    projectSeparator?.dispose();
+    projectSeparator = undefined;
+
+    if (!vscode.workspace.workspaceFolders) {
+        console.log('No workspace folder open');
         return;
     }
 
-    isReloading = true;
+    const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-    try {
-        // Dispose static items
-        disposeItems(projectItems);
-        projectItems = [];
-        disposeItems(globalItems);
-        globalItems = [];
-        projectSeparator?.dispose();
-        projectSeparator = undefined;
+    // Load Project Actions
+    const localActions = loadLocalActions(workspaceRoot);
+    const newProjectItems = createActionItems(localActions, 200, 'project');
 
-        if (!vscode.workspace.workspaceFolders) {
-            console.log('No workspace folder open');
-            return;
-        }
+    // Load Global Actions
+    const globalActions = await getMatchingGlobalActions(workspaceRoot).catch(error => {
+        console.error('Error loading global actions:', error);
+        return [];
+    });
 
-        const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
-
-        // Load Project Actions
-        const localActions = loadLocalActions(workspaceRoot);
-        projectItems = createActionItems(localActions, 200, 'project');
-
-        // Load Global Actions
-        const globalActions = await getMatchingGlobalActions(workspaceRoot).catch(error => {
-            console.error('Error loading global actions:', error);
-            return [];
-        });
-        globalItems = createActionItems(globalActions, 100, 'global');
-
-        // Create separator between Project and Global if both exist
-        if (projectItems.length > 0 && globalItems.length > 0) {
-            projectSeparator = createSeparator(150);
-        }
-
-        // Update Active File Actions
-        updateActiveFileActions();
-
-        console.log(`Loaded ${projectItems.length} project, ${globalItems.length} global actions`);
-    } finally {
-        isReloading = false;
-        if (pendingReload) {
-            pendingReload = false;
-            reloadActions();
-        }
+    // If a newer reload has started, don't apply these results
+    if (currentToken !== reloadToken) {
+        disposeItems(newProjectItems);
+        return;
     }
+
+    projectItems = newProjectItems;
+    globalItems = createActionItems(globalActions, 100, 'global');
+
+    // Create separator between Project and Global if both exist
+    if (projectItems.length > 0 && globalItems.length > 0) {
+        projectSeparator = createSeparator(150);
+    }
+
+    // Update Active File Actions
+    updateActiveFileActions();
+
+    console.log(`Loaded ${projectItems.length} project, ${globalItems.length} global actions`);
 }
 
 function getActiveFileUri(): vscode.Uri | undefined {
@@ -399,17 +392,7 @@ function getActiveFileUri(): vscode.Uri | undefined {
     return undefined;
 }
 
-let isUpdatingActiveFile = false;
-let pendingUpdateActiveFile = false;
-
 function updateActiveFileActions(): void {
-    if (isUpdatingActiveFile) {
-        pendingUpdateActiveFile = true;
-        return;
-    }
-
-    isUpdatingActiveFile = true;
-
     // Dispose active items
     disposeItems(activeFileItems);
     activeFileItems = [];
@@ -452,12 +435,6 @@ function updateActiveFileActions(): void {
     // Create separator if active items exist AND (project OR global items exist)
     if (activeFileItems.length > 0 && (projectItems.length > 0 || globalItems.length > 0)) {
         activeSeparator = createSeparator(250);
-    }
-
-    isUpdatingActiveFile = false;
-    if (pendingUpdateActiveFile) {
-        pendingUpdateActiveFile = false;
-        updateActiveFileActions();
     }
 }
 
