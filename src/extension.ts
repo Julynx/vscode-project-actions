@@ -78,6 +78,9 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.window.onDidChangeActiveTextEditor(() => {
             updateActiveFileActions();
         }),
+        vscode.window.tabGroups.onDidChangeTabGroups(() => {
+            updateActiveFileActions();
+        }),
         vscode.window.tabGroups.onDidChangeTabs(() => {
             updateActiveFileActions();
         })
