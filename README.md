@@ -16,7 +16,7 @@ Add custom action buttons to your VS Code status bar that execute shell commands
 ## Quick Start
 
 1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Run **"Project Actions: Edit Project Actions"**
+2. Run `Project Actions: Edit Project Actions`
 3. Configure your actions in the generated [`.project-actions.json`](.project-actions.json) file
 
 **Example:**
@@ -76,7 +76,7 @@ Use VS Code variables for dynamic commands:
 Define actions in VS Code settings that appear based on file patterns:
 
 1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Run **"Project Actions: Edit Global Actions"**
+2. Run `Project Actions: Edit Global Actions`
 3. Add global actions as follows:
 
 ```json
@@ -99,7 +99,7 @@ Global actions appear when the `glob` pattern matches files in your workspace (e
 Define actions in VS Code settings that appear based on the currently active file:
 
 1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Run **"Project Actions: Edit Active File Actions"**
+2. Run `Project Actions: Edit Active File Actions`
 3. Add active file actions as follows:
 
 ```json
