@@ -108,14 +108,14 @@ Define actions in VS Code settings that appear based on the currently active fil
     {
       "text": "$(python) Run Python",
       "command": "python ${file}",
-      "glob": "**/*.py",
+      "glob": "*.py",
       "tooltip": "Run current Python file"
     }
   ]
 }
 ```
 
-Active file actions appear when the `glob` pattern matches the currently open file (e.g., `**/*.py` shows the action only when editing Python files).
+Active file actions appear when the `glob` pattern matches the currently open file (e.g., `*.py` shows the action only when editing Python files).
 
 ## Settings
 
