@@ -511,7 +511,7 @@ function resolveVariables(command: string): string {
 
 function executeAction(text: string, command: string): void {
     const resolvedCommand = resolveVariables(command);
-    const terminal = vscode.window.createTerminal(`Project Actions: ${text}`);
+    const terminal = vscode.window.createTerminal(text);
     terminal.show();
     terminal.sendText(resolvedCommand);
 }
