@@ -282,7 +282,7 @@ function createStatusBarItem(action: ActionButton, priority: number, idSuffix: s
     // Use a unique command ID to avoid collisions
     const commandId = `project-actions.action-${idSuffix}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const disposable = vscode.commands.registerCommand(commandId, () => {
-        executeAction(action.command);
+        executeAction(action.text, action.command);
     });
 
     statusBarItem.command = commandId;
@@ -509,9 +509,9 @@ function resolveVariables(command: string): string {
     return resolved;
 }
 
-function executeAction(command: string): void {
+function executeAction(text: string, command: string): void {
     const resolvedCommand = resolveVariables(command);
-    const terminal = vscode.window.createTerminal('Project Actions');
+    const terminal = vscode.window.createTerminal(`Project Actions: ${text}`);
     terminal.show();
     terminal.sendText(resolvedCommand);
 }
